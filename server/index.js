@@ -1,37 +1,59 @@
+require('dotenv').config();
 const express = require('express');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+// Initialize the Express application
+const app = express();
+
+// Use environment variable for port, or default to 3000
+const port = process.env.PORT || 5000;
+
 const userRoutes = require('./routes/userRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const cors = require('cors');
-
-dotenv.config();
-
-const app = express();
-
-connectDB();
-
-app.use((req, res, next) => {
-    console.log(req.path, req.method, new Date())
-    next()
-})
-
-app.options('*', cors());
 
 app.use(express.json());
+
+// const cors = require('cors');
+
+// app.use(cors({
+//     origin: 'https://task-manager-app-frontend-seven.vercel.app/',
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     credentials: true,
+// }));
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// MongoDB connection using Mongoose
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
+
+
+app.use((req, res, next) => {
+    console.log("test ===== ", req.path, req.method, new Date())
+    next()
+})
 
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
-// User routes
+app.get('/test', (req, res) => {
+    res.status(200).send('Test route is working');
+});
+
 app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/categories', categoryRoutes);
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Start the server
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
